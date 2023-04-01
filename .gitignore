@@ -1,0 +1,6 @@
+*.pyc
+*.csv
+*.xlsx
+server/test_send_params.py
+server/test_send_table.py
+server/fictious_back.py
