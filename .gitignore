@@ -1,6 +1,7 @@
 *.pyc
-*.csv
-*.xlsx
+server/test.csv
+server/test.xlsx
 server/test_send_params.py
 server/test_send_table.py
 server/fictitious_back.py
+server/test_addresses.py
