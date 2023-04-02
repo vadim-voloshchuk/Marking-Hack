@@ -1,0 +1,14 @@
+.main{
+    height: 100%;
+}
+.content{
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+
+    &__stat{
+        width: 80%;
+    display: flex;
+    flex-direction: column;
+    }
+}
