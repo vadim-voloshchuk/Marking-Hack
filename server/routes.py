@@ -4,40 +4,43 @@ from fictitious_back import send_params, send_table
 import pandas as pd
 import binascii
 import io
-
-
-INCORRECT_REQUEST_TYPE = "Неверный тип запроса!"
-FILE_ERROR = "Ошибка чтения файла!"
+from consts import *
+from func import read_table
+from datetime import datetime
 
 
 @app.route("/")
 def hello():
     return "Hello!"
 
-@app.route("/get_charts", methods=['POST'])
-def get_charts():
+@app.route("/get_charts_from_table", methods=['POST'])
+def get_charts_from_table():
     if request.method == 'POST':
         if 'file' not in request.files:
             print(FILE_ERROR)
             return FILE_ERROR
-        # print(request.files['file'])
-        send_table(pd.read_excel(request.files['file']))
-        return "OK"
+
+        table = request.files['file']
+        table = read_table(table)
+
+        return send_table(table)
     else:
         print(INCORRECT_REQUEST_TYPE)
         return INCORRECT_REQUEST_TYPE
     
 @app.route("/get_charts_from_params", methods=['POST'])
 def get_charts_from_params():
-    raw = request.json
-    print(raw)
-    binary_string = binascii.unhexlify(raw['weekly sales'])
-    string = str(binary_string)
-    print(type(string))
-    print(string[2:len(string)-1])
-    csv_file = pd.read_csv(io.BytesIO(binary_string))
-    print(csv_file)
-    return 'OK'
+    if request.method == 'POST':
+        raw = request.json
+        binary_string = binascii.unhexlify(raw['weekly sales'])
+        table = io.BytesIO(binary_string)
+        table = read_table(table)
+
+        return send_params(float(raw['cost']), raw['location'], datetime.strptime(raw['planning date'], '%m.%d.%Y').date(),
+                    raw['category'], raw['brand'], float(raw['weight']), raw['weekly sales'])
+    else:
+        print(INCORRECT_REQUEST_TYPE)
+        return INCORRECT_REQUEST_TYPE
 
 @app.route("/get_members", methods=['GET'])
 def get_members():
