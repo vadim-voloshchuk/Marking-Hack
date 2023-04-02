@@ -32,8 +32,8 @@ def processing():
             table = io.BytesIO(binary_string)
             table = read_table(table)
 
-            return json.dumps(send_params(float(raw['cost']), raw['location'], datetime.strptime(raw['planning date'], '%m.%d.%Y').date(),
-                        raw['category'], raw['brand'], float(raw['weight']), table))
+            return json.dumps(send_params(float(raw['cost']), raw['location'], datetime.strptime(raw['planning date'], '%d.%m.%Y').date(),
+                        raw['category'], float(raw['weight']), table))
     else:
         print(INCORRECT_REQUEST_TYPE)
         return INCORRECT_REQUEST_TYPE
