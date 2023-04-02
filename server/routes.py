@@ -1,6 +1,6 @@
 from __main__ import app
 from flask import request
-from fictitious_back import send_params, send_table
+# from fictitious_back import send_params, send_table
 import pandas as pd
 import binascii
 import io
@@ -32,8 +32,8 @@ def processing():
             table = io.BytesIO(binary_string)
             table = read_table(table)
 
-            return json.dumps(send_params(float(raw['cost']), raw['location'], datetime.strptime(raw['planning date'], '%d.%m.%Y').date(),
-                        raw['category'], float(raw['weight']), table))
+            return json.dumps(send_params(float(raw['cost']), raw['location'], datetime.strptime(raw['date_end'], '%d.%m.%Y').date(), datetime.strptime(raw['date_start'], '%d.%m.%Y').date(),
+                        raw['sale type'], float(raw['weight']), table))
     else:
         print(INCORRECT_REQUEST_TYPE)
         return INCORRECT_REQUEST_TYPE
@@ -43,7 +43,7 @@ def get_addresses():
     search_dict = {}
     for each_address in addresses_lst:
         address_str = str(each_address)
-        search_dict[address_str[2:len(address_str)-2]] = fuzz.WRatio(request.args['part_str'], str(each_address))
+        search_dict[address_str[2:len(address_str)-2]] = fuzz.WRatio(request.json['part_str'], str(each_address))
 
     sorted_addresses = dict(sorted(search_dict.items(), key=lambda item: item[1], reverse=True))
 
@@ -59,6 +59,9 @@ def get_addresses():
 
 @app.route("/get_sale_types", methods=['GET'])
 def get_sale_types():
+    sale_types = []
     with open('sale_types.txt', 'rt', encoding='UTF-8') as types_file:
-        sale_types = types_file.readlines()
+        for i in range(4):
+            type = types_file.readline().rstrip('\n')
+            sale_types.append(type)
     return json.dumps(sale_types)

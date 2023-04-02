@@ -1,4 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import axios from "axios"
+import classnames from "classnames";
 
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -7,28 +9,58 @@ import CategoryIcon from "@mui/icons-material/Category";
 import ScaleIcon from "@mui/icons-material/Scale";
 import CurrencyRubleIcon from "@mui/icons-material/CurrencyRuble";
 import InputAdornment from "@mui/material/InputAdornment/InputAdornment";
-
-import styles from "./styles.module.scss";
 import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
 import DatePicker from "../datePicker/datePicker";
-import classnames from "classnames";
+import styles from "./styles.module.scss";
 
+interface IForm{
+  cost: string,
+    location:  string,
+    sale_type: string,
+    weight:  string,
+    data_start:  string,
+    date_end:  string,
+    file: File|null,
 
+    fileName:string
+}
 const Menu = () => {
-  const [form, setForm] = useState({
-    category: "",
-    locale: "",
+  let formData = new FormData();
+  const [form, setForm] = useState<IForm>(
+    {
     cost: "",
+    location: "",
+    sale_type: "",
     weight: "",
     data_start: "",
     date_end: "",
-    file: "",
+    file:null,
+    fileName:''
   });
-
-  const [category, setCategory] = useState(["1", "2", "3", "4", "5"]);
+  const [category, setCategory] = useState([]);
+ const [addresses, setAdresses] = useState([]);
   const [menuPage, setMenuPage] = useState(false)
+const [locale, setLocale]=useState('')
+  
+const res=async()=>{
+      return await axios.get("http://localhost:5000/get_sale_types")
+      .then(res=>setCategory(res.data))
+}
+const getAddress=async(part_str:string)=>{
+  await axios.post("http://localhost:5000/get_addresses", {"part_str":part_str}) 
+  .then(res=>setAdresses(res.data))
+}
 
-  const btnHandler=useCallback(()=>{setMenuPage(!menuPage)},[menuPage])
+const btnHandler=useCallback(()=>{setMenuPage(!menuPage)},[menuPage])
+
+useEffect(()=>{
+  res()
+ },[])
+
+ useEffect(()=>{
+  getAddress(locale)}
+  ,[locale])
+
   return (
     <div className={styles.menu}>
       <div className={styles.menu__form}>
@@ -71,7 +103,7 @@ const Menu = () => {
           <Autocomplete
             className={styles.form__input}
             id="tags-outlined"
-            options={category}
+            options={addresses}
             renderInput={(params) => (
               <TextField
                 sx={{
@@ -81,9 +113,14 @@ const Menu = () => {
                     marginBottom:3
                   },
                 }}
+                
+                onChange={(e)=>{setLocale(e.target.value)
+                    setForm({...form, location:e.target.value})
+                  }}
                 className={styles.form__text}
                 {...params}
                 InputProps={{
+                  
                 ...params.InputProps,
                 startAdornment: (
                   <InputAdornment position="start">
@@ -95,6 +132,9 @@ const Menu = () => {
                   
                 ),
                 
+              }}
+              InputLabelProps={{
+                shrink: true,
               }}
                 label="Локализация продукта"
               />
@@ -111,6 +151,9 @@ const Menu = () => {
             options={category}
             renderInput={(params) => (
               <TextField
+              onChange={(e)=>{
+                setForm({...form, sale_type:e.target.value})
+              }}
                 sx={{
                   "& .MuiInputBase-root": {
                     height: 40,
@@ -130,7 +173,7 @@ const Menu = () => {
                     </InputAdornment>
                   ),
                 }}
-                label="Категория продукта"
+                label="Тип продаж"
               />
             )}
           />
@@ -140,9 +183,14 @@ const Menu = () => {
             sx={{}}
             className={styles.form__input}
             id="tags-outlined"
-            options={category}
+            options={addresses}
             renderInput={(params) => (
               <TextField
+              
+              onChange={(e)=>{
+                setLocale(e.target.value)
+                  setForm({...form, location:e.target.value})
+                }}
                 sx={{
                   "& .MuiInputBase-root": {
                     height: 40,
@@ -151,19 +199,9 @@ const Menu = () => {
                 }}
                 className={styles.form__text}
                 {...params}
-                /*InputProps={{
-                ...params.InputProps,
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <RoomIcon
-                      fontSize="small"
-                      style={{ position: "relative", bottom: "5px" }}
-                    />
-                  </InputAdornment>
-                  
-                ),
-                
-              }}*/
+                InputLabelProps={{
+                  shrink: true,
+                }}
                 label="Локализация продукта"
               />
             )}
@@ -175,6 +213,9 @@ const Menu = () => {
                 height: 40,
                 borderRadius: 2.5,
               },
+            }}
+            onChange={(e)=>{
+              setForm({...form, cost:e.target.value})
             }}
             InputProps={{
               startAdornment: (
@@ -200,6 +241,9 @@ const Menu = () => {
                 </InputAdornment>
               ),
             }}
+            onChange={(e)=>{
+              setForm({...form, weight:e.target.value})
+            }}
             label="Вес единицы продутка"
           />
           <DatePicker />
@@ -208,13 +252,16 @@ const Menu = () => {
       </div>
       <div className={styles.form__upload}>
         <p className={styles.upload__label}>Загрузка данных из таблицы</p>
-        <h1 className={styles.upload__fileName}>{form.file&&form.file.substring(0,9)}{!form.file&&"Пока файлов нет..."}</h1>
+        <h1 className={styles.upload__fileName}>{form.fileName&&form.fileName.substring(0,9)}{!form.fileName&&"Пока файлов нет..."}</h1>
         <label className={styles.upload__btn}>
           <input
             type="file"
             accept=".csv,.xlsx"
             onChange={(e) => {
-              setForm({ ...form, file: e.target.value.split("\\")[2] });
+              e&&e.target&&e.target.files&&setForm({...form, file:e.target.files[0]})
+              form.file&&formData.append("file", form.file);
+              setForm({ ...form, fileName: e.target.value.split('\\')[e.target.value.split('\\').length-1] });
+              
             }}
           />
           Добавить
@@ -222,6 +269,8 @@ const Menu = () => {
        
         <p className={styles.upload__fileName}>*Форматы, допустимые для загрузки: .csv/.xlsx</p>
       </div>
+
+            <button className={styles.btn_submit}>Расчитать</button>
     </div>
   );
 };
