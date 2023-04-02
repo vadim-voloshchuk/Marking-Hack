@@ -37,7 +37,7 @@ def get_charts_from_params():
         table = read_table(table)
 
         return send_params(float(raw['cost']), raw['location'], datetime.strptime(raw['planning date'], '%m.%d.%Y').date(),
-                    raw['category'], raw['brand'], float(raw['weight']), raw['weekly sales'])
+                    raw['category'], raw['brand'], float(raw['weight']), table)
     else:
         print(INCORRECT_REQUEST_TYPE)
         return INCORRECT_REQUEST_TYPE
